@@ -1,35 +1,35 @@
-const User = require('../models/users');
+const Rider = require('../models/rider');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/accessToken');
 
 // create user
-module.exports.createUser = async (req, res) => {
+module.exports.createRider = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, phone_number } = req.body;
      
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !phone_number) {
             return res.status(400).json({ message: 'Please enter all fields' });
-        }
+        }   
 
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' });
+        const existingRider = await Rider.findOne({ email });
+        if (existingRider) {
+            return res.status(400).json({ message: 'Rider already exists' });
         }
 
         // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser = new User({ name, email, password: hashedPassword });
-        await newUser.save();
-        res.status(201).json({ message: 'User created successfully', user: newUser });
+        const newRider = new Rider({ name, email, password: hashedPassword, phone_number });
+        await newRider.save();
+        res.status(201).json({ message: 'Rider created successfully', rider: newRider });
     } catch (err) {
         res.status(500).json({ message: err.message || 'Server Error' });
     }
 };
 
-module.exports.loginUser = async (req, res) => {
+module.exports.loginRider = async (req, res) => {   
     try {
         const { email, password } = req.body;
         
@@ -37,30 +37,31 @@ module.exports.loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Please enter all fields' });
         }
 
-        const user = await User.findOne({ email });
-        if (!user) {
+        const rider = await Rider.findOne({ email });
+        if (!rider) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, rider.password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
         // Create tokens
-        const tokenUser = { id: user._id };
-        const accessToken = generateAccessToken(tokenUser);
-        const refreshToken = generateRefreshToken(tokenUser);
+        const tokenRider = { id: rider._id };
+        const accessToken = generateAccessToken(tokenRider);
+        const refreshToken = generateRefreshToken(tokenRider);
 
         // For mobile apps, return tokens in response body
         return res.status(200).json({
             message: 'Login successful',
             accessToken,
             refreshToken,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email
+            rider: {
+                id: rider._id,
+                name: rider.name,
+                email: rider.email,
+                phone_number: rider.phone_number
             }
         });
 
@@ -83,22 +84,23 @@ module.exports.verifyRefreshTokenAndIssue = async (req, res) => {
             return res.status(403).json({ message: 'Invalid refresh token' });
         }
         
-        // Check if user exists
-        const user = await User.findById(decoded.id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+        // Check if rider exists
+        const rider = await Rider.findById(decoded.id);
+        if (!rider) {
+            return res.status(404).json({ message: 'Rider not found' });
         }
         
         // Generate new access token
-        const tokenUser = { id: user._id };
-        const accessToken = generateAccessToken(tokenUser);
+        const tokenRider = { id: rider._id };
+        const accessToken = generateAccessToken(tokenRider);
         
         return res.status(200).json({
             accessToken,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email
+            rider: {
+                id: rider._id,
+                name: rider.name,
+                email: rider.email,
+                phone_number: rider.phone_number
             }
         });
     } catch (err) {

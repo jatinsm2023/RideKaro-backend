@@ -6,7 +6,11 @@ const bodyParser = require('body-parser');
 const connectDB = require('./db');
 const cookieParser = require("cookie-parser");
 
-const userRoutes = require('./routes/users');
+const riderRoutes = require('./routes/rider');
+const driverRoutes = require('./routes/driver');
+const ridesRoutes = require('./routes/rides');
+
+
 
 require('dotenv').config();
 const app = express();
@@ -48,17 +52,21 @@ app.use(compression());
 app.use(cookieParser());
 
 
-// Database
+// Connect to MongoDB
 connectDB();
 
 // Routes
-app.use('/v0/users', userRoutes);
+app.use('/v0/rider', riderRoutes); 
+app.use('/v0/driver', driverRoutes); 
+app.use('/v0/rides', ridesRoutes);
+
 
 app.get('/', (req, res) => {
-    console.log('Root endpoint hit');
-    return res.status(200).send('Ride Karo API is running...');
+  res.send('RideKaro Backend API is running!');
 });
 
 const PORT = process.env.PORT || 400;
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+app.use(cookieParser());

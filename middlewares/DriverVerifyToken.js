@@ -15,9 +15,9 @@ module.exports = function(req, res, next) {
     try {
         // Verify token
         const decoded = jwt.verify(token || cookieToken, process.env.JWT_SECRET_NEW);
-        req.user = decoded;
+        req.rider = decoded;
         next();
     } catch (error) {
         return res.status(403).json({ message: 'Invalid token' });
-    }
+    }   
 };
